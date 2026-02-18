@@ -1,0 +1,175 @@
+/* ---------- reset & base ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: #f0f4f8;
+  color: #1a202c;
+  min-height: 100vh;
+}
+
+a { color: #3182ce; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- navigation ---------- */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1a202c;
+  padding: 0.75rem 2rem;
+}
+
+nav .brand {
+  color: #f6e05e;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+nav .brand:hover { text-decoration: none; }
+
+nav .nav-links a {
+  color: #e2e8f0;
+  margin-left: 1.5rem;
+  font-size: 0.95rem;
+}
+nav .nav-links a:hover { color: #f6e05e; text-decoration: none; }
+
+/* ---------- main ---------- */
+main {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* ---------- alerts ---------- */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+.alert-success { background: #c6f6d5; color: #22543d; }
+.alert-danger  { background: #fed7d7; color: #822727; }
+.alert-warning { background: #fefcbf; color: #744210; }
+.alert-info    { background: #bee3f8; color: #2a4365; }
+
+/* ---------- auth card ---------- */
+.auth-card {
+  max-width: 400px;
+  margin: 6rem auto;
+  background: #fff;
+  padding: 2.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  text-align: center;
+}
+.auth-card h1 { margin-bottom: 0.25rem; }
+.auth-card .subtitle { color: #718096; margin-bottom: 1.5rem; }
+.auth-card form { text-align: left; }
+.auth-card .alt-link { margin-top: 1rem; font-size: 0.9rem; }
+
+/* ---------- form elements ---------- */
+label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+input[type="number"] {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  margin-top: 0.25rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+button {
+  display: block;
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.7rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #3182ce;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover { background: #2b6cb0; }
+
+/* ---------- container ---------- */
+.container { margin-top: 1rem; }
+.container h1 { margin-bottom: 1.5rem; }
+
+/* ---------- card grid ---------- */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.card h2 { margin-bottom: 0.75rem; font-size: 1.15rem; }
+.card ol { padding-left: 1.25rem; }
+.card li { margin-bottom: 0.4rem; }
+
+.btn {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1.25rem;
+  background: #3182ce;
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.btn:hover { background: #2b6cb0; text-decoration: none; }
+
+/* ---------- prediction page ---------- */
+.predict-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.predict-form {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.result-card {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.result-card h2 { margin-bottom: 1rem; }
+.result-card table { width: 100%; border-collapse: collapse; }
+.result-card th,
+.result-card td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+.result-card th { width: 45%; color: #4a5568; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 640px) {
+  .predict-wrapper { grid-template-columns: 1fr; }
+  nav { flex-direction: column; gap: 0.5rem; }
+}

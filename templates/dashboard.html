@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – Energy Forecasting{% endblock %}
+{% block content %}
+<div class="container">
+  <h1>Welcome, {{ session['user'] }}!</h1>
+
+  <div class="card-grid">
+    <div class="card">
+      <h2>📊 About the Model</h2>
+      <p>
+        This project uses the <strong>London Smart Meter</strong> dataset containing
+        half-hourly electricity readings from over 5,400 households. The combined
+        load is used to train a deep-learning model that forecasts aggregate
+        energy consumption for a given date and time.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>🔮 Make a Prediction</h2>
+      <p>
+        Enter a future date, time, and number of households to get a predicted
+        electricity usage value.
+      </p>
+      <a href="{{ url_for('predict') }}" class="btn">Go to Prediction</a>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ How It Works</h2>
+      <ol>
+        <li>Select a date and time for the forecast.</li>
+        <li>Optionally specify the number of households.</li>
+        <li>The model returns the predicted aggregate electricity usage (kWh).</li>
+      </ol>
+    </div>
+  </div>
+</div>
+{% endblock %}
