@@ -20,11 +20,11 @@ users: dict[str, str] = {}
 def login_required(view):
     """Redirect anonymous users to the login page."""
     @functools.wraps(view)
-    def wrapped(**kwargs):
+    def wrapped(*args, **kwargs):
         if "user" not in session:
             flash("Please log in first.", "warning")
             return redirect(url_for("login"))
-        return view(**kwargs)
+        return view(*args, **kwargs)
     return wrapped
 
 
