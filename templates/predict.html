@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Predict – Energy Forecasting{% endblock %}
+{% block content %}
+<div class="container">
+  <h1>Electricity Usage Prediction</h1>
+
+  <div class="predict-wrapper">
+    <form method="POST" action="{{ url_for('predict') }}" class="predict-form">
+      <label for="date">Date</label>
+      <input id="date" name="date" type="date" required>
+
+      <label for="time">Time</label>
+      <input id="time" name="time" type="time" required>
+
+      <label for="num_houses">Number of Households (optional)</label>
+      <input id="num_houses" name="num_houses" type="number" min="1" max="100000"
+             placeholder="Default: 5567">
+
+      <button type="submit">Predict</button>
+    </form>
+
+    {% if prediction %}
+    <div class="result-card">
+      <h2>Prediction Result</h2>
+      <table>
+        <tr><th>Date &amp; Time</th><td>{{ prediction.datetime }}</td></tr>
+        <tr><th>Households</th><td>{{ prediction.houses }}</td></tr>
+        <tr><th>Predicted Usage</th><td><strong>{{ prediction.kwh }} kWh</strong></td></tr>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
