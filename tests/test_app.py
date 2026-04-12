@@ -7,6 +7,7 @@ def client():
     app.config["TESTING"] = True
     app.config["SECRET_KEY"] = "test-secret"
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    app.config["RATELIMIT_ENABLED"] = False
 
     with app.app_context():
         db.create_all()
@@ -19,7 +20,7 @@ def client():
         db.drop_all()
 
 
-def _register(client, username="testuser", password="testpass"):
+def _register(client, username="testuser", password="Testpass1"):
     return client.post(
         "/register",
         data={"username": username, "password": password},
@@ -27,7 +28,7 @@ def _register(client, username="testuser", password="testpass"):
     )
 
 
-def _login(client, username="testuser", password="testpass"):
+def _login(client, username="testuser", password="Testpass1"):
     return client.post(
         "/login",
         data={"username": username, "password": password},

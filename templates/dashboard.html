@@ -38,5 +38,55 @@
       <a href="{{ url_for('settings') }}" class="btn">Configure API</a>
     </div>
   </div>
+
+  <!-- Feature 5: hourly energy chart -->
+  <div class="chart-section">
+    <h2>⚡ Hourly Energy Profile <span class="chart-subtitle">(London Smart Meter dataset – sample averages)</span></h2>
+    <p class="chart-hint">
+      Upload your own CSV on the <a href="{{ url_for('upload') }}">Upload CSV</a> page to see your data here.
+    </p>
+    <div class="chart-wrapper">
+      <canvas id="energyChart"></canvas>
+    </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+  const labels = {{ chart_labels | tojson }};
+  const data   = {{ chart_data   | tojson }};
+  new Chart(document.getElementById('energyChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Avg kWh per half-hour',
+        data: data,
+        borderColor: '#3182ce',
+        backgroundColor: 'rgba(49,130,206,0.12)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true, position: 'top' },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'kWh / half-hour' }
+        },
+        x: {
+          title: { display: true, text: 'Hour of day' }
+        }
+      }
+    }
+  });
+</script>
 {% endblock %}

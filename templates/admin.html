@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Admin – Energy Forecasting{% endblock %}
+{% block content %}
+<div class="container">
+  <h1>🛡️ Admin Panel</h1>
+  <p class="settings-subtitle">All registered users ({{ users | length }} total).</p>
+
+  <div class="admin-card">
+    {% if users %}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.id }}</td>
+          <td>{{ u.username }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No users registered yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
