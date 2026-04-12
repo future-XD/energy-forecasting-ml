@@ -70,7 +70,7 @@ def _init_db():
         try:
             db.session.add(ModelConfig(api_url=None, api_key=None))
             db.session.commit()
-        except Exception:
+        except db.exc.IntegrityError:
             db.session.rollback()
 
 
@@ -343,6 +343,11 @@ def profile():
         confirm_pw = request.form.get("confirm_password", "").strip()
 
         user = User.query.filter_by(username=session["user"]).first()
+
+        if not user:
+            session.pop("user", None)
+            flash("User account not found. Please log in again.", "danger")
+            return redirect(url_for("login"))
 
         if not check_password_hash(user.password_hash, current_pw):
             flash("Current password is incorrect.", "danger")
