@@ -6,31 +6,36 @@
 
   <div class="card-grid">
     <div class="card">
-      <h2>📊 About the Model</h2>
+      <h2>📊 About the Project</h2>
       <p>
         This project uses the <strong>London Smart Meter</strong> dataset containing
-        half-hourly electricity readings from over 5,400 households. The combined
-        load is used to train a deep-learning model that forecasts aggregate
-        energy consumption for a given date and time.
+        half-hourly electricity readings from over 5,400 households. A deep-learning
+        model is being trained to forecast aggregate energy consumption for a given
+        date and time.
       </p>
     </div>
 
     <div class="card">
       <h2>🔮 Make a Prediction</h2>
       <p>
-        Enter a future date, time, and number of households to get a predicted
-        electricity usage value.
+        Enter a future date, time, and number of households. The prediction engine
+        is currently under development — check back soon!
       </p>
       <a href="{{ url_for('predict') }}" class="btn">Go to Prediction</a>
     </div>
 
     <div class="card">
-      <h2>⚙️ How It Works</h2>
-      <ol>
-        <li>Select a date and time for the forecast.</li>
-        <li>Optionally specify the number of households.</li>
-        <li>The model returns the predicted aggregate electricity usage (kWh).</li>
-      </ol>
+      <h2>⚙️ AI Model API</h2>
+      <p>
+        Connect the app to a local or remote AI model API endpoint. Once configured,
+        predictions will be served through that endpoint.
+      </p>
+      {% if config and config.api_url %}
+        <p class="api-status connected">✅ API configured</p>
+      {% else %}
+        <p class="api-status not-configured">⚠️ No API configured yet</p>
+      {% endif %}
+      <a href="{{ url_for('settings') }}" class="btn">Configure API</a>
     </div>
   </div>
 </div>

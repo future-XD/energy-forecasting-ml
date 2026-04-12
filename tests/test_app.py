@@ -1,13 +1,22 @@
 import pytest
-from app import app
+from app import app, db, ModelConfig
 
 
 @pytest.fixture
 def client():
     app.config["TESTING"] = True
     app.config["SECRET_KEY"] = "test-secret"
-    with app.test_client() as client:
-        yield client
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+
+    with app.app_context():
+        db.create_all()
+        db.session.add(ModelConfig(api_url=None, api_key=None))
+        db.session.commit()
+
+        with app.test_client() as client:
+            yield client
+
+        db.drop_all()
 
 
 def _register(client, username="testuser", password="testpass"):
@@ -73,7 +82,12 @@ def test_predict_requires_login(client):
     assert b"Please log in" in resp.data
 
 
-# ---------- Prediction ----------
+def test_settings_requires_login(client):
+    resp = client.get("/settings", follow_redirects=True)
+    assert b"Please log in" in resp.data
+
+
+# ---------- Prediction (coming soon) ----------
 
 def test_predict_page_renders(client):
     _register(client)
@@ -83,7 +97,7 @@ def test_predict_page_renders(client):
     assert b"Prediction" in resp.data
 
 
-def test_predict_returns_result(client):
+def test_predict_returns_coming_soon(client):
     _register(client)
     _login(client)
     resp = client.post(
@@ -92,8 +106,7 @@ def test_predict_returns_result(client):
         follow_redirects=True,
     )
     assert resp.status_code == 200
-    assert b"kWh" in resp.data
-    assert b"Prediction Result" in resp.data
+    assert b"Coming Soon" in resp.data
 
 
 def test_predict_missing_fields(client):
@@ -107,15 +120,40 @@ def test_predict_missing_fields(client):
     assert b"required" in resp.data
 
 
-def test_predict_default_houses(client):
+# ---------- Settings ----------
+
+def test_settings_page_renders(client):
+    _register(client)
+    _login(client)
+    resp = client.get("/settings")
+    assert resp.status_code == 200
+    assert b"AI Model API" in resp.data
+
+
+def test_settings_save_api_url(client):
     _register(client)
     _login(client)
     resp = client.post(
-        "/predict",
-        data={"date": "2025-06-01", "time": "08:00", "num_houses": ""},
+        "/settings",
+        data={"api_url": "http://localhost:5001/predict", "api_key": ""},
         follow_redirects=True,
     )
-    assert b"5567" in resp.data
+    assert b"Settings saved" in resp.data
+    assert b"localhost:5001" in resp.data
+
+
+def test_settings_clear_api_url(client):
+    _register(client)
+    _login(client)
+    # Set a URL first
+    client.post("/settings", data={"api_url": "http://localhost:5001/predict", "api_key": ""})
+    # Clear it
+    resp = client.post(
+        "/settings",
+        data={"api_url": "", "api_key": ""},
+        follow_redirects=True,
+    )
+    assert b"Settings saved" in resp.data
 
 
 def test_index_redirects_to_login(client):

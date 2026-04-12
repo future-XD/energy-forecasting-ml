@@ -173,3 +173,84 @@ button:hover { background: #2b6cb0; }
   .predict-wrapper { grid-template-columns: 1fr; }
   nav { flex-direction: column; gap: 0.5rem; }
 }
+
+/* ---------- coming soon card ---------- */
+.coming-soon-card {
+  background: #fff;
+  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  text-align: center;
+  border-top: 4px solid #f6e05e;
+}
+.coming-soon-card .coming-soon-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+.coming-soon-card h2 { margin-bottom: 0.75rem; font-size: 1.5rem; }
+.coming-soon-card p { color: #4a5568; margin-bottom: 0.5rem; }
+.coming-soon-card .btn { margin-top: 1.25rem; }
+
+/* ---------- settings page ---------- */
+.settings-subtitle {
+  color: #4a5568;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+.settings-subtitle code {
+  background: #edf2f7;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.88rem;
+}
+
+.settings-card {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  max-width: 600px;
+  margin-bottom: 1.5rem;
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.82rem;
+  color: #718096;
+  margin-top: 0.25rem;
+}
+
+label .optional {
+  font-weight: 400;
+  color: #718096;
+  font-size: 0.85rem;
+}
+
+.settings-status {
+  max-width: 600px;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.settings-status code {
+  background: #edf2f7;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+.settings-status.connected    { background: #c6f6d5; color: #22543d; }
+.settings-status.not-configured { background: #fefcbf; color: #744210; }
+
+/* ---------- dashboard api status ---------- */
+.api-status { font-size: 0.88rem; margin: 0.5rem 0 0; }
+.api-status.connected     { color: #276749; }
+.api-status.not-configured { color: #975a16; }
+
+/* ---------- btn outline ---------- */
+.btn-outline {
+  background: transparent;
+  border: 2px solid #3182ce;
+  color: #3182ce;
+}
+.btn-outline:hover { background: #3182ce; color: #fff; text-decoration: none; }
