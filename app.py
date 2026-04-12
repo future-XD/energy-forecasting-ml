@@ -21,7 +21,7 @@ app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
 # Database configuration
 # ---------------------------------------------------------------------------
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL", "sqlite:///energy.db"
+    "DATABASE_URL", "sqlite:////tmp/energy.db"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -412,7 +412,10 @@ def upload():
 
 
 # ---------------------------------------------------------------------------
+# Initialise the database (runs on every cold start / import, including Vercel)
+with app.app_context():
+    _init_db()
+
+# ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    with app.app_context():
-        _init_db()
     app.run(debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true")
