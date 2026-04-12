@@ -156,6 +156,17 @@ def test_settings_clear_api_url(client):
     assert b"Settings saved" in resp.data
 
 
+def test_settings_invalid_url_rejected(client):
+    _register(client)
+    _login(client)
+    resp = client.post(
+        "/settings",
+        data={"api_url": "not-a-valid-url", "api_key": ""},
+        follow_redirects=True,
+    )
+    assert b"valid URL" in resp.data
+
+
 def test_index_redirects_to_login(client):
     resp = client.get("/")
     assert resp.status_code == 302

@@ -1,5 +1,6 @@
 import os
 import functools
+from urllib.parse import urlparse
 
 from flask import (
     Flask, render_template, request, redirect, url_for,
@@ -39,6 +40,7 @@ class ModelConfig(db.Model):
 
     @staticmethod
     def get():
+        """Return the singleton ModelConfig row, or None if not yet seeded."""
         return ModelConfig.query.first()
 
 
@@ -46,8 +48,11 @@ def _init_db():
     """Create tables and seed default rows."""
     db.create_all()
     if not ModelConfig.query.first():
-        db.session.add(ModelConfig(api_url=None, api_key=None))
-        db.session.commit()
+        try:
+            db.session.add(ModelConfig(api_url=None, api_key=None))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
 
 
 # ---------------------------------------------------------------------------
@@ -162,6 +167,12 @@ def settings():
     if request.method == "POST":
         api_url = request.form.get("api_url", "").strip()
         api_key = request.form.get("api_key", "").strip()
+
+        if api_url:
+            parsed = urlparse(api_url)
+            if parsed.scheme not in ("http", "https") or not parsed.netloc:
+                flash("Please enter a valid URL (must start with http:// or https://).", "danger")
+                return redirect(url_for("settings"))
 
         config.api_url = api_url or None
         config.api_key = api_key or None

@@ -22,7 +22,7 @@
       <label for="api_key">API Key <span class="optional">(optional)</span></label>
       <input id="api_key" name="api_key" type="password"
              placeholder="••••••••"
-             autocomplete="new-password"
+             autocomplete="off"
              value="{{ config.api_key or '' }}">
       <span class="field-hint">
         Bearer token or secret key required by the AI model server, if any.
