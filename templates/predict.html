@@ -19,14 +19,13 @@
       <button type="submit">Predict</button>
     </form>
 
-    {% if prediction %}
-    <div class="result-card">
-      <h2>Prediction Result</h2>
-      <table>
-        <tr><th>Date &amp; Time</th><td>{{ prediction.datetime }}</td></tr>
-        <tr><th>Households</th><td>{{ prediction.houses }}</td></tr>
-        <tr><th>Predicted Usage</th><td><strong>{{ prediction.kwh }} kWh</strong></td></tr>
-      </table>
+    {% if coming_soon %}
+    <div class="coming-soon-card">
+      <div class="coming-soon-icon">🚧</div>
+      <h2>Coming Soon</h2>
+      <p>The prediction model is currently under active development.</p>
+      <p>Check back soon — the AI model API will be integrated here once it is ready.</p>
+      <a href="{{ url_for('settings') }}" class="btn btn-outline">Configure AI Model API →</a>
     </div>
     {% endif %}
   </div>

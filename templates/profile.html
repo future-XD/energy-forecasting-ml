@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Profile – Energy Forecasting{% endblock %}
+{% block content %}
+<div class="container">
+  <h1>👤 Profile</h1>
+
+  <div class="settings-card">
+    <p><strong>Username:</strong> {{ session['user'] }}</p>
+
+    <h2 style="margin-top:1.5rem; font-size:1.1rem;">Change Password</h2>
+
+    <form method="POST" action="{{ url_for('profile') }}">
+      <label for="current_password">Current Password</label>
+      <input id="current_password" name="current_password" type="password" required autocomplete="current-password">
+
+      <label for="new_password">New Password</label>
+      <input id="new_password" name="new_password" type="password" required autocomplete="new-password">
+      <span class="field-hint">Minimum 8 characters, must include at least one letter and one digit.</span>
+
+      <label for="confirm_password">Confirm New Password</label>
+      <input id="confirm_password" name="confirm_password" type="password" required autocomplete="new-password">
+
+      <button type="submit">Update Password</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

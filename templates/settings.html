@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Settings – Energy Forecasting{% endblock %}
+{% block content %}
+<div class="container">
+  <h1>⚙️ AI Model API Settings</h1>
+  <p class="settings-subtitle">
+    Configure the connection to the AI prediction model. The model can run locally
+    (e.g. <code>http://localhost:5001/predict</code>) or on an external server.
+  </p>
+
+  <div class="settings-card">
+    <form method="POST" action="{{ url_for('settings') }}">
+
+      <label for="api_url">AI Model API URL</label>
+      <input id="api_url" name="api_url" type="url"
+             placeholder="http://localhost:5001/predict"
+             value="{{ config.api_url or '' }}">
+      <span class="field-hint">
+        Full URL of the prediction endpoint. Leave blank if not yet configured.
+      </span>
+
+      <label for="api_key">API Key <span class="optional">(optional)</span></label>
+      <input id="api_key" name="api_key" type="password"
+             placeholder="••••••••"
+             autocomplete="off"
+             value="{{ config.api_key or '' }}">
+      <span class="field-hint">
+        Bearer token or secret key required by the AI model server, if any.
+      </span>
+
+      <button type="submit">Save Settings</button>
+    </form>
+  </div>
+
+  {% if config.api_url %}
+  <div class="settings-status connected">
+    <span>✅ API endpoint configured:</span>
+    <code>{{ config.api_url }}</code>
+  </div>
+  {% else %}
+  <div class="settings-status not-configured">
+    <span>⚠️ No AI model API URL is configured yet.</span>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

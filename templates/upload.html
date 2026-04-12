@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Upload CSV – Energy Forecasting{% endblock %}
+{% block content %}
+<div class="container">
+  <h1>📂 Upload Energy Data CSV</h1>
+  <p class="settings-subtitle">
+    Upload a CSV file with timestamped energy readings (e.g. the London Smart Meter format:
+    <code>LCLid, tstp, energy(kWh/hh)</code>). Any CSV with a datetime column and a numeric
+    energy column is supported. Maximum file size: 5 MB.
+  </p>
+
+  <div class="settings-card">
+    <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+      <label for="csv_file">Choose CSV file</label>
+      <input id="csv_file" name="csv_file" type="file" accept=".csv" required class="file-input">
+      <button type="submit">Upload &amp; Analyse</button>
+    </form>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-danger">⚠️ {{ error }}</div>
+  {% endif %}
+
+  {% if stats %}
+  <!-- Feature 4: summary stats -->
+  <div class="upload-results">
+    <div class="stats-card">
+      <h2>📊 Summary Statistics</h2>
+      <table class="stats-table">
+        <tr><th>Rows parsed</th><td>{{ stats.rows }}</td></tr>
+        <tr><th>Datetime column</th><td><code>{{ stats.dt_col }}</code></td></tr>
+        <tr><th>Energy column</th><td><code>{{ stats.energy_col }}</code></td></tr>
+        <tr><th>Min (kWh)</th><td>{{ stats.min_kwh }}</td></tr>
+        <tr><th>Max (kWh)</th><td>{{ stats.max_kwh }}</td></tr>
+        <tr><th>Average (kWh)</th><td>{{ stats.avg_kwh }}</td></tr>
+        <tr><th>Total (kWh)</th><td>{{ stats.total_kwh }}</td></tr>
+      </table>
+    </div>
+
+    <!-- Feature 6: peak-hour detection -->
+    <div class="peak-card">
+      <h2>🔥 Top 3 Peak Hours</h2>
+      <p class="field-hint">Hours with the highest average energy consumption in your dataset.</p>
+      <ol class="peak-list">
+        {% for p in peak_info %}
+        <li>
+          <span class="peak-hour">{{ p.hour }}</span>
+          <span class="peak-value">{{ p.avg_kwh }} kWh</span>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+
+  <!-- Feature 5: Chart.js hourly chart -->
+  <div class="chart-section">
+    <h2>⚡ Hourly Energy Profile <span class="chart-subtitle">(average kWh per hour-of-day)</span></h2>
+    <div class="chart-wrapper">
+      <canvas id="uploadChart"></canvas>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if chart_labels and chart_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+  const labels = {{ chart_labels | tojson }};
+  const data   = {{ chart_data   | tojson }};
+  new Chart(document.getElementById('uploadChart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Avg kWh',
+        data: data,
+        backgroundColor: 'rgba(49,130,206,0.7)',
+        borderColor: '#3182ce',
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true, position: 'top' },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'kWh / reading' }
+        },
+        x: {
+          title: { display: true, text: 'Hour of day' }
+        }
+      }
+    }
+  });
+</script>
+{% endif %}
+{% endblock %}
