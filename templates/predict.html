@@ -2,32 +2,65 @@
 {% block title %}Predict – Energy Forecasting{% endblock %}
 {% block content %}
 <div class="container">
-  <h1>Electricity Usage Prediction</h1>
+  <h1>Electricity Demand Prediction</h1>
 
   <div class="predict-wrapper">
     <form method="POST" action="{{ url_for('predict') }}" class="predict-form">
-      <label for="date">Date</label>
-      <input id="date" name="date" type="date" required>
 
-      <label for="time">Time</label>
-      <input id="time" name="time" type="time" required>
+      <label for="model_choice">Model Architecture</label>
+      <select id="model_choice" name="model_choice" style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid #cbd5e0; margin-top: 0.25rem; font-size: 1rem;">
+          <option value="v3">V3: XGBoost (Full Momentum Lags)</option>
+          <option value="v1">V1: Random Forest (Baseline Schedule)</option>
+      </select>
 
-      <label for="num_houses">Number of Households (optional)</label>
-      <input id="num_houses" name="num_houses" type="number" min="1" max="100000"
-             placeholder="Default: 5567">
+      <label for="date">Target Date</label>
+      <input id="date" name="date" type="date" required value="{{ request.form.get('date', '') }}">
 
-      <button type="submit">Predict</button>
+      <label for="time">Target Time</label>
+      <input id="time" name="time" type="time" required value="{{ request.form.get('time', '') }}">
+
+      <label for="temperature">Temperature (°C)</label>
+      <input id="temperature" name="temperature" type="number" step="0.1" required value="{{ request.form.get('temperature', '20.0') }}">
+
+      <label for="lag_1">Grid Load 30 Mins Ago (kWh) <span class="optional">- Required for V3</span></label>
+      <input id="lag_1" name="lag_1" type="number" step="0.1" required value="{{ request.form.get('lag_1', '1250') }}">
+
+      <label for="lag_48">Grid Load 24 Hours Ago (kWh) <span class="optional">- Required for V3</span></label>
+      <input id="lag_48" name="lag_48" type="number" step="0.1" required value="{{ request.form.get('lag_48', '1300') }}">
+
+      <button type="submit">Run Prediction</button>
     </form>
 
-    {% if coming_soon %}
-    <div class="coming-soon-card">
-      <div class="coming-soon-icon">🚧</div>
-      <h2>Coming Soon</h2>
-      <p>The prediction model is currently under active development.</p>
-      <p>Check back soon — the AI model API will be integrated here once it is ready.</p>
-      <a href="{{ url_for('settings') }}" class="btn btn-outline">Configure AI Model API →</a>
+    <div>
+        {% if not models_ready %}
+        <div class="coming-soon-card">
+          <div class="coming-soon-icon">⚠️</div>
+          <h2>Models Not Found</h2>
+          <p>Please place <code>random_forest_v1.joblib</code> and <code>xgboost_v3_lagged.joblib</code> in the root directory and restart the server.</p>
+        </div>
+
+        {% elif prediction %}
+        <div class="result-card" style="border-top: 4px solid #3182ce;">
+          <h2>Prediction Results</h2>
+          <table>
+              <tr><th>Model Used</th><td>{{ model_name }}</td></tr>
+              <tr><th>Target Time</th><td>{{ date }} at {{ time }}</td></tr>
+              <tr><th>Predicted Grid Load</th><td style="font-size: 1.5rem; font-weight: bold; color: #2b6cb0;">{{ prediction }} kWh</td></tr>
+          </table>
+          <a href="{{ url_for('predict') }}" class="btn btn-outline" style="margin-top: 1.5rem; display: block; text-align: center;">Reset Form</a>
+        </div>
+
+        {% else %}
+        <div class="card">
+            <h2>Model Comparison Engine</h2>
+            <p>Select your trained model on the left to see how feature engineering impacts the forecast.</p>
+            <ul style="margin-top: 1rem; padding-left: 1.5rem; color: #4a5568;">
+                <li style="margin-bottom: 0.5rem;"><strong>V1 Baseline:</strong> Relies only on the time of day and temperature. Highly stable but misses extreme demand peaks.</li>
+                <li><strong>V3 XGBoost:</strong> Uses historical lag momentum to ride the physical trajectory of the grid.</li>
+            </ul>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
   </div>
 </div>
 {% endblock %}

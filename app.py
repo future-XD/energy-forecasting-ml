@@ -3,7 +3,18 @@ import os
 import functools
 from datetime import timedelta
 from urllib.parse import urlparse
+import joblib
+from sqlalchemy.engine import URL
 
+from dotenv import load_dotenv
+load_dotenv()
+try:
+    rf_v1 = joblib.load('random_forest_v1.joblib')
+    xgb_v3 = joblib.load('xgboost_v3_lagged.joblib')
+    MODELS_READY = True
+except Exception as e:
+    MODELS_READY = False
+    print(f"Warning: Models not loaded. {e}")
 import pandas as pd
 from flask import (
     Flask, render_template, request, redirect, url_for,
@@ -14,15 +25,28 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
 
+USER = os.getenv("user")
+PASSWORD = os.getenv("password")
+HOST = os.getenv("host")
+PORT = os.getenv("port")
+DBNAME = os.getenv("dbname", "postgres")
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
+# Build the URI using URL.create() so special characters in the password are safe
+if all([USER, PASSWORD, HOST]):
+    app.config["SQLALCHEMY_DATABASE_URI"] = URL.create(
+        drivername="postgresql+psycopg2",
+        username=USER,
+        password=PASSWORD,
+        host=HOST,
+        port=int(PORT) if PORT else 5432,
+        database=DBNAME,
+    )
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+        "DATABASE_URL", "sqlite:////tmp/energy.db"
+    )
 
-# ---------------------------------------------------------------------------
-# Database configuration
-# ---------------------------------------------------------------------------
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL", "sqlite:////tmp/energy.db"
-)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Feature 11: session lifetime for "Remember me"
@@ -49,6 +73,12 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
+
+
+class GridReading(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, nullable=False, unique=True)
+    load_kwh = db.Column(db.Float, nullable=False)
 
 
 class ModelConfig(db.Model):
@@ -125,9 +155,6 @@ SAMPLE_HOURLY_KWH = [
 def process_csv(file_stream):
     """
     Parse an uploaded CSV and return (stats, chart_labels, chart_data, peak_info).
-
-    Supports the London Smart Meter format (columns: LCLid, tstp, energy(kWh/hh))
-    as well as any CSV with a datetime-like column and a numeric energy column.
     """
     try:
         df = pd.read_csv(file_stream)
@@ -157,15 +184,14 @@ def process_csv(file_stream):
             energy_col = col
             break
     if energy_col is None:
-        # Fall back to first numeric column that isn't the datetime column
         for col in df.columns:
             if col != dt_col and pd.api.types.is_numeric_dtype(df[col]):
                 energy_col = col
                 break
     if energy_col is None:
-        # Last resort: second column
         energy_col = df.columns[1] if df.columns[1] != dt_col else df.columns[0]
 
+    # 1. CLEAN THE DATA FIRST
     df[dt_col] = pd.to_datetime(df[dt_col], errors="coerce")
     df = df.dropna(subset=[dt_col])
     df[energy_col] = pd.to_numeric(df[energy_col], errors="coerce")
@@ -174,6 +200,20 @@ def process_csv(file_stream):
     if df.empty:
         raise ValueError("No valid rows found after parsing datetime and energy columns.")
 
+    # 2. SAVE CLEAN DATA TO DATABASE
+    records = []
+    for _, row in df.iterrows():
+        # Because we already converted the column to datetime above, we can just call to_pydatetime()
+        native_dt = row[dt_col].to_pydatetime()
+        records.append(GridReading(timestamp=native_dt, load_kwh=row[energy_col]))
+
+    try:
+        db.session.bulk_save_objects(records)
+        db.session.commit()
+    except db.exc.IntegrityError:
+        db.session.rollback()
+
+    # 3. GENERATE DASHBOARD STATS
     stats = {
         "rows": len(df),
         "dt_col": dt_col,
@@ -184,13 +224,11 @@ def process_csv(file_stream):
         "total_kwh": round(float(df[energy_col].sum()), 2),
     }
 
-    # Hourly aggregation (average kWh per hour-of-day)
     df["_hour"] = df[dt_col].dt.hour
     hourly = df.groupby("_hour")[energy_col].mean()
     chart_labels = [f"{h:02d}:00" for h in range(24)]
     chart_data = [round(float(hourly.get(h, 0.0)), 4) for h in range(24)]
 
-    # Feature 6: top-3 peak hours
     top_hours = hourly.nlargest(3)
     peak_info = [
         {
@@ -281,32 +319,73 @@ def logout():
 def dashboard():
     config = ModelConfig.get()
     chart_labels = [f"{h:02d}:00" for h in range(24)]
+
+    # Check if the user has uploaded a custom CSV; if not, use the fallback sample
+    display_data = session.get('custom_chart_data', SAMPLE_HOURLY_KWH)
+
     return render_template(
         "dashboard.html",
         config=config,
         chart_labels=chart_labels,
-        chart_data=SAMPLE_HOURLY_KWH,
+        chart_data=display_data,
     )
 
 
 @app.route("/predict", methods=["GET", "POST"])
 @login_required
 def predict():
-    coming_soon = False
+    prediction = None
+    model_name = None
+    date_str = ""
+    time_str = ""
 
     if request.method == "POST":
         date_str = request.form.get("date", "").strip()
         time_str = request.form.get("time", "").strip()
+        model_choice = request.form.get("model_choice", "v3")
 
-        if not date_str or not time_str:
-            flash("Date and time are required.", "danger")
-            return redirect(url_for("predict"))
+        try:
+            # Extract inputs from the form
+            temperature = float(request.form.get("temperature", 20.0))
+            lag_1 = float(request.form.get("lag_1", 1000.0))
+            lag_48 = float(request.form.get("lag_48", 1000.0))
 
-        # The prediction model is under active development.
-        # Once the AI model API is ready, predictions will be served here.
-        coming_soon = True
+            if not date_str or not time_str:
+                flash("Date and time are required.", "danger")
+                return redirect(url_for("predict"))
 
-    return render_template("predict.html", coming_soon=coming_soon)
+            # Convert standard date/time into time-series features
+            dt = pd.to_datetime(f"{date_str} {time_str}")
+            hour = dt.hour
+            day_of_week = dt.dayofweek
+            month = dt.month
+
+            if MODELS_READY:
+                # Route to the correct model based on user selection
+                if model_choice == "v1":
+                    features = pd.DataFrame([[temperature, hour, day_of_week, month]],
+                                            columns=['temperature', 'hour', 'day_of_week', 'month'])
+                    prediction = round(float(rf_v1.predict(features)[0]), 2)
+                    model_name = "Random Forest (V1 Baseline)"
+                else:
+                    features = pd.DataFrame([[temperature, hour, day_of_week, month, lag_1, lag_48]],
+                                            columns=['temperature', 'hour', 'day_of_week', 'month', 'load_lag_1', 'load_lag_48'])
+                    prediction = round(float(xgb_v3.predict(features)[0]), 2)
+                    model_name = "XGBoost (V3 Momentum Lag)"
+            else:
+                flash("Machine learning models are not loaded on the server.", "danger")
+
+        except Exception as e:
+            flash(f"Error processing prediction: {str(e)}", "danger")
+
+    return render_template(
+        "predict.html",
+        models_ready=MODELS_READY,
+        prediction=prediction,
+        model_name=model_name,
+        date=date_str,
+        time=time_str
+    )
 
 
 @app.route("/settings", methods=["GET", "POST"])
@@ -398,6 +477,7 @@ def upload():
         try:
             stream = io.StringIO(file.stream.read().decode("utf-8", errors="replace"))
             stats, chart_labels, chart_data, peak_info = process_csv(stream)
+            session['custom_chart_data'] = chart_data
         except ValueError as exc:
             error = str(exc)
 
