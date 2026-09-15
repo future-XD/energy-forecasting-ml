@@ -20,3 +20,4 @@ app=org.py
 templates/predict-org.html
 1.py
 random_forest_v1.joblib
+.git
