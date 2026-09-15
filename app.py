@@ -9,8 +9,14 @@ from sqlalchemy.engine import URL
 from dotenv import load_dotenv
 load_dotenv()
 try:
-    rf_v1 = joblib.load('random_forest_v1.joblib')
-    xgb_v3 = joblib.load('xgboost_v3_lagged.joblib')
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    print(f"Looking for models in: {BASE_DIR}")
+    print(f"Directory contents: {os.listdir(BASE_DIR)}")
+    MODEL_PATH = os.path.join(BASE_DIR, "random_forest_v1_compressed.joblib")
+    MODEL_PATH2 = os.path.join(BASE_DIR, "xgboost_v3_lagged.joblib")
+
+    rf_v1 = joblib.load(MODEL_PATH)
+    xgb_v3 = joblib.load(MODEL_PATH2)
     MODELS_READY = True
 except Exception as e:
     MODELS_READY = False
